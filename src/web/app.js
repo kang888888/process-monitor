@@ -12,6 +12,7 @@ const btnStop = document.getElementById("btnStop");
 
 const chartCpu = document.getElementById("chartCpu");
 const chartMem = document.getElementById("chartMem");
+const chartGpu = document.getElementById("chartGpu");
 const chartDisk = document.getElementById("chartDisk");
 const chartNet = document.getElementById("chartNet");
 const netUnitSelect = document.getElementById("netUnitSelect");
@@ -19,6 +20,7 @@ const netUnitSelect = document.getElementById("netUnitSelect");
 const procCount = document.getElementById("procCount");
 const liveCpu = document.getElementById("liveCpu");
 const liveMem = document.getElementById("liveMem");
+const liveGpu = document.getElementById("liveGpu");
 
 const procModalOverlay = document.getElementById("procModalOverlay");
 const procModalClose = document.getElementById("procModalClose");
@@ -77,6 +79,7 @@ function clearStatus() {
   procCount.textContent = "-";
   liveCpu.textContent = "-";
   liveMem.textContent = "-";
+  if (liveGpu) liveGpu.textContent = "-";
 }
 
 function clearChartsData() {
@@ -209,6 +212,27 @@ function initCharts() {
     series: [{ ...common.series[0], name: "内存 MB", itemStyle: { color: "#38bdf8" } }],
   });
 
+  if (chartGpu) {
+    charts.gpu = echarts.init(chartGpu);
+    charts.gpu.setOption({
+      ...common,
+      tooltip: {
+        trigger: "axis",
+        valueFormatter: (v) => `${Number(v).toFixed(2)} %`,
+      },
+      yAxis: {
+        ...common.yAxis,
+        name: "%",
+        nameTextStyle: { color: "#94a3b8" },
+        nameGap: 12,
+        min: 0,
+        max: 100,
+        axisLabel: { formatter: (v) => `${v}` },
+      },
+      series: [{ ...common.series[0], name: "GPU %", itemStyle: { color: "#8b5cf6" } }],
+    });
+  }
+
   charts.disk = echarts.init(chartDisk);
   charts.disk.setOption({
     ...common,
@@ -262,6 +286,11 @@ function updateCharts() {
 
   charts.cpu.setOption({ series: [{ data: filtered.map((s) => [s.ts * 1000, s.cpu_pct]) }] });
   charts.mem.setOption({ series: [{ data: filtered.map((s) => [s.ts * 1000, s.mem_rss_mb]) }] });
+  if (charts.gpu) {
+    charts.gpu.setOption({
+      series: [{ data: filtered.map((s) => [s.ts * 1000, s.gpu_pct != null ? s.gpu_pct : 0]) }]
+    });
+  }
   // 磁盘 IO：读/写分别绑定，避免与 series 顺序混淆导致两条线用错数据
   const diskReadData = filtered.map((s) => [s.ts * 1000, bytesToMB(s.disk_read_bps)]);
   const diskWriteData = filtered.map((s) => [s.ts * 1000, bytesToMB(s.disk_write_bps)]);
@@ -292,6 +321,9 @@ function updateStatus(s) {
   procCount.textContent = s.process_count;
   liveCpu.textContent = Number.isFinite(s.cpu_pct) ? s.cpu_pct.toFixed(2) : s.cpu_pct;
   liveMem.textContent = Number.isFinite(s.mem_rss_mb) ? s.mem_rss_mb.toFixed(2) : s.mem_rss_mb;
+  if (liveGpu) {
+    liveGpu.textContent = Number.isFinite(s.gpu_pct) ? s.gpu_pct.toFixed(2) : (s.gpu_pct ?? "-");
+  }
 }
 
 async function fetchApps() {

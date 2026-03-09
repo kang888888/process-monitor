@@ -1,7 +1,10 @@
 """
-进程指标采集器：按 exe 名称聚合所有实例的 CPU、内存、磁盘 IO。
-Windows 下磁盘 IO 使用 PDH 性能计数器（与任务管理器同源），非 Windows 或 PDH 不可用时回退到 psutil。
+进程指标采集器：按 exe 名称聚合所有实例的 CPU、内存、磁盘 IO、GPU。
+Windows 下 GPU 使用 PDH 性能计数器 GPU Engine（与任务管理器对齐），仅支持 Windows。
 """
+import logging
+import os
+import re
 import sys
 import time
 import threading
@@ -10,6 +13,14 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 import psutil
+
+logger = logging.getLogger(__name__)
+# 设置 PROCESS_MONITOR_GPU_DEBUG=1 可输出 GPU 采集调试日志（启动前设置环境变量）
+if os.environ.get("PROCESS_MONITOR_GPU_DEBUG"):
+    _h = logging.StreamHandler()
+    _h.setFormatter(logging.Formatter("[%(name)s] %(message)s"))
+    logger.addHandler(_h)
+    logger.setLevel(logging.DEBUG)
 
 # Windows：使用 PDH 获取与任务管理器一致的磁盘 IO 速率（IO Read/Write Bytes/sec）
 if sys.platform == "win32":
@@ -34,6 +45,7 @@ class Sample:
     disk_write_bps: float
     net_recv_bps: float
     net_sent_bps: float
+    gpu_pct: float  # GPU 利用率 0~100，仅 Windows PDH 有值
     process_count: int
     pids: list[int] = field(default_factory=list)
 
@@ -64,6 +76,176 @@ class ProcessCollector:
         self._pdh_query = None
         self._pdh_counter_read = None
         self._pdh_counter_write = None
+        # Windows GPU：GPU Engine Running time 差分得到利用率
+        self._prev_gpu_running_sum: float = 0.0
+        self._prev_gpu_ts: float = 0.0
+
+    def _get_gpu_usage_pdh(self, pids: list[int], now: float) -> float:
+        """Windows PDH：当前监控进程的 GPU 利用率（3D 引擎，与任务管理器对齐）。返回 0~100。"""
+        if not pids or not _PDH_AVAILABLE or win32pdh is None:
+            return 0.0
+        pid_set = set(pids)
+        # 使用 PDH_FMT_LARGE 避免 100ns 累积值溢出（PDH_FMT_LONG 会截断）
+        _PDH_FMT_LARGE = getattr(win32pdh, "PDH_FMT_LARGE", 0x00000400)
+
+        def _to_float(v):
+            try:
+                return float(v)
+            except (TypeError, ValueError):
+                if isinstance(v, (list, tuple)) and v:
+                    try:
+                        return float(v[0])
+                    except (TypeError, ValueError):
+                        pass
+                return 0.0
+
+        def _collect_gpu_items(object_name: str, counter_name: str):
+            """用给定对象名和计数器名打开查询并返回 (instance -> value) 的 dict。"""
+            query = ctr = None
+            try:
+                query = win32pdh.OpenQuery()
+                path = win32pdh.MakeCounterPath(
+                    (None, object_name, "*", None, 0, counter_name)
+                )
+                ctr = win32pdh.AddCounter(query, path)
+                win32pdh.CollectQueryData(query)
+                time.sleep(0.5)  # 建议 >500ms 以便 PDH 计算差值
+                win32pdh.CollectQueryData(query)
+                get_array = getattr(
+                    win32pdh, "GetFormattedCounterValueArray", None
+                ) or getattr(win32pdh, "GetFormattedCounterArray", None)
+                if not get_array:
+                    logger.debug("[GPU] GetFormattedCounterArray 不可用")
+                    return None
+                # 传入 PDH_FMT_LARGE 避免 100ns 累积值溢出
+                try:
+                    items = get_array(ctr, _PDH_FMT_LARGE)
+                except TypeError:
+                    items = get_array(ctr)
+                return items
+            except Exception as e:
+                logger.debug("[GPU] _collect_gpu_items 失败: %s", e)
+                return None
+            finally:
+                if ctr is not None and query is not None:
+                    try:
+                        win32pdh.RemoveCounter(ctr)
+                        win32pdh.CloseQuery(query)
+                    except Exception:
+                        pass
+
+        items = None
+        # 1) 优先英文计数器（部分系统可用）
+        try:
+            query = win32pdh.OpenQuery()
+            ctr = win32pdh.AddEnglishCounter(
+                query, r"\GPU Engine(*)\Running time"
+            )
+            win32pdh.CollectQueryData(query)
+            time.sleep(0.5)
+            win32pdh.CollectQueryData(query)
+            get_array = getattr(
+                win32pdh, "GetFormattedCounterValueArray", None
+            ) or getattr(win32pdh, "GetFormattedCounterArray", None)
+            if get_array:
+                try:
+                    items = get_array(ctr, _PDH_FMT_LARGE)
+                except TypeError:
+                    items = get_array(ctr)
+            win32pdh.RemoveCounter(ctr)
+            win32pdh.CloseQuery(query)
+        except Exception as e:
+            logger.debug("[GPU] AddEnglishCounter 失败（可能需本地化）: %s", e)
+
+        # 2) 若英文失败，枚举本地化对象与计数器
+        if not items and getattr(win32pdh, "EnumObjectItems", None):
+            # 可选：EnumObjects 列出所有对象，排查 GPU 相关
+            if logger.isEnabledFor(logging.DEBUG) and getattr(win32pdh, "EnumObjects", None):
+                try:
+                    objs = win32pdh.EnumObjects(None, None, win32pdh.PERF_DETAIL_WIZARD, 0)
+                    if isinstance(objs, str):
+                        objs = [s for s in objs.split("\x00") if s.strip()]
+                    gpu_objs = [o for o in objs if "gpu" in (o or "").lower()]
+                    logger.debug("[GPU] 系统 PDH 对象中含 GPU: %s", gpu_objs[:20] if gpu_objs else "无")
+                except Exception as e:
+                    logger.debug("[GPU] EnumObjects 失败: %s", e)
+            try:
+                obj_name = "GPU Engine"
+                counters_list, instances_list = win32pdh.EnumObjectItems(
+                    None, None, obj_name, win32pdh.PERF_DETAIL_WIZARD, 0
+                )
+            except Exception as e:
+                logger.debug("[GPU] EnumObjectItems(GPU Engine) 失败: %s", e)
+                obj_name = None
+                counters_list = []
+            if obj_name and counters_list is not None:
+                if isinstance(counters_list, str):
+                    counters_list = [s for s in counters_list.split("\x00") if s.strip()]
+                if not isinstance(counters_list, list):
+                    counters_list = list(counters_list) if counters_list else []
+                counter_name = None
+                for c in counters_list:
+                    cn = (c or "").strip()
+                    if not cn:
+                        continue
+                    if "running" in cn.lower() or "time" in cn.lower() or "运行" in cn:
+                        counter_name = cn
+                        break
+                if not counter_name and counters_list:
+                    try:
+                        counter_name = (counters_list[0].strip() if isinstance(counters_list[0], str) else str(counters_list[0])) or "Running time"
+                    except Exception:
+                        counter_name = "Running time"
+                if counter_name:
+                    logger.debug("[GPU] 使用本地化计数器: %s\\%s", obj_name, counter_name)
+                    items = _collect_gpu_items(obj_name, counter_name)
+
+        if not items:
+            logger.debug("[GPU] 无 PDH 数据，请确认：1) 有 GPU 2) 驱动正常 3) 以管理员运行")
+            return 0.0
+
+        # 解析多实例：仅统计 engtype_3D（与任务管理器主表一致，避免多引擎累加超 100%）
+        current_sum = 0.0
+        matched_instances = []
+        if isinstance(items, dict):
+            for inst_name, val in items.items():
+                inst = (inst_name or "").lower()
+                m = re.search(r"pid_(\d+)", inst)
+                if m and int(m.group(1)) in pid_set and "engtype_3d" in inst:
+                    v = _to_float(val)
+                    current_sum += v
+                    matched_instances.append((inst_name, v))
+        else:
+            for item in items:
+                if not isinstance(item, (list, tuple)) or len(item) < 2:
+                    continue
+                inst_name, val = item[0], item[1]
+                inst = (str(inst_name) or "").lower()
+                m = re.search(r"pid_(\d+)", inst)
+                if m and int(m.group(1)) in pid_set and "engtype_3d" in inst:
+                    v = _to_float(val)
+                    current_sum += v
+                    matched_instances.append((inst_name, v))
+
+        if logger.isEnabledFor(logging.DEBUG) and matched_instances:
+            logger.debug("[GPU] 匹配 3D 实例数=%d, current_sum=%.0f", len(matched_instances), current_sum)
+
+        # 首次采样只建立基线
+        if self._prev_gpu_ts <= 0:
+            self._prev_gpu_ts = now
+            self._prev_gpu_running_sum = current_sum
+            logger.debug("[GPU] 首次采样建立基线, sum=%.0f", current_sum)
+            return 0.0
+        elapsed = max(now - self._prev_gpu_ts, 0.1)
+        self._prev_gpu_ts = now
+        delta = max(0.0, current_sum - self._prev_gpu_running_sum)
+        self._prev_gpu_running_sum = current_sum
+        # Running time 为 100ns 单位
+        pct = (delta * 1e-7 / elapsed) * 100.0
+        result = min(100.0, max(0.0, round(pct, 2)))
+        if logger.isEnabledFor(logging.DEBUG) and result > 0:
+            logger.debug("[GPU] delta=%.0f elapsed=%.2fs pct=%.2f", delta, elapsed, result)
+        return result
 
     def _normalize_exe(self, name: str) -> str:
         """统一 exe 名称格式（小写、去路径）"""
@@ -177,6 +359,7 @@ class ProcessCollector:
                 disk_write_bps=0.0,
                 net_recv_bps=0.0,
                 net_sent_bps=0.0,
+                gpu_pct=0.0,
                 process_count=0,
                 pids=[],
             )
@@ -299,6 +482,11 @@ class ProcessCollector:
         if cpu_dt > 0:
             cpu_pct = (cpu_time_delta_sum / (cpu_dt * self._cpu_count)) * 100.0
 
+        # GPU：仅 Windows 且 PDH 可用时采集（3D 引擎利用率）
+        gpu_pct = 0.0
+        if sys.platform == "win32":
+            gpu_pct = self._get_gpu_usage_pdh(pids, now)
+
         return Sample(
             ts=now,
             cpu_pct=float(cpu_pct),
@@ -307,6 +495,7 @@ class ProcessCollector:
             disk_write_bps=round(io_write, 2),
             net_recv_bps=round(net_recv_bps, 2),
             net_sent_bps=round(net_sent_bps, 2),
+            gpu_pct=float(gpu_pct),
             process_count=len(pids),
             pids=pids.copy(),
         )
@@ -336,6 +525,8 @@ class ProcessCollector:
         self._prev_net = None
         self._prev_net_ts = 0.0
         self._prev_net_rate = (0.0, 0.0)
+        self._prev_gpu_running_sum = 0.0
+        self._prev_gpu_ts = 0.0
         self._proc_cache = {}
         self._prev_cpu_time = {}
         self._prev_cpu_ts = 0.0
@@ -369,6 +560,8 @@ class ProcessCollector:
         self._prev_net = None
         self._prev_net_ts = 0.0
         self._prev_net_rate = (0.0, 0.0)
+        self._prev_gpu_running_sum = 0.0
+        self._prev_gpu_ts = 0.0
 
     def get_samples(self) -> list[dict]:
         """获取窗口内所有采样（用于前端初始化）"""
@@ -383,6 +576,7 @@ class ProcessCollector:
                     "disk_write_bps": s.disk_write_bps,
                     "net_recv_bps": s.net_recv_bps,
                     "net_sent_bps": s.net_sent_bps,
+                    "gpu_pct": s.gpu_pct,
                     "process_count": s.process_count,
                 }
                 for ts, s in self._buffer
@@ -403,5 +597,6 @@ class ProcessCollector:
                 "disk_write_bps": s.disk_write_bps,
                 "net_recv_bps": s.net_recv_bps,
                 "net_sent_bps": s.net_sent_bps,
+                "gpu_pct": s.gpu_pct,
                 "process_count": s.process_count,
             }

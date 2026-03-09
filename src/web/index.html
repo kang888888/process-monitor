@@ -37,6 +37,11 @@
         <h3>内存 (MB)</h3>
         <div id="chartMem" class="chart"></div>
       </div>
+      <div class="chart-card">
+        <h3>GPU (%) <span class="chart-note">当前应用 · Windows</span></h3>
+        <p class="chart-desc">3D 引擎利用率，与任务管理器对齐</p>
+        <div id="chartGpu" class="chart"></div>
+      </div>
       <div class="chart-card wide">
         <h3>磁盘 IO (MB/s) <span class="chart-note">当前应用</span></h3>
         <p class="chart-desc">读/写为进程 io_counters 速率，Windows 上为磁盘+网络合计</p>
@@ -63,6 +68,7 @@
         <p>进程数: <span id="procCount" class="linklike" title="点击查看进程详情">-</span></p>
         <p>CPU: <span id="liveCpu">-</span> %</p>
         <p>内存: <span id="liveMem">-</span> MB</p>
+        <p>GPU: <span id="liveGpu">-</span> %</p>
       </div>
     </aside>
   </main>
