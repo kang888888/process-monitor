@@ -1,0 +1,29 @@
+
+2026-03-09 14:49:14.287 [INFO] [#36] pid=27 cpu=0.50 mem=1698.71 disk_r=276231 disk_w=315828 (raw_r=36953 raw_w=37056) net_recv=18139 net_sent=3843
+2026-03-09 14:52:39.651 [INFO] ========== 开始收集 (日志: E:\tester\process-monitor\collect-debug.log) ========== exe=['chrome.exe'] interval_ms=1000 use_pdh_disk=False pid_count=21 pids=[1816, 2268, 4064, 4252, 7152, 8288, 8540, 12940, 13136, 13620, 13648, 13996, 14092, 17488, 19904, 21956, 26560, 27024, 28448, 33008]
+2026-03-09 14:52:39.651 [INFO] [首拍] cpu=0.59 mem=1540.68 disk_r=36788 disk_w=36707 (raw_r=36788 raw_w=36707) net_recv=1797 net_sent=507
+2026-03-09 14:52:40.220 [INFO] [#1] pid=21 cpu=0.11 mem=1540.68 disk_r=0 disk_w=0 (raw_r=0 raw_w=0) net_recv=3814 net_sent=2972
+2026-03-09 14:52:41.792 [INFO] [#2] pid=21 cpu=0.37 mem=1542.37 disk_r=0 disk_w=0 (raw_r=0 raw_w=0) net_recv=2101 net_sent=1582
+2026-03-09 14:52:43.357 [INFO] [#3] pid=21 cpu=0.25 mem=1542.84 disk_r=0 disk_w=0 (raw_r=0 raw_w=0) net_recv=5699 net_sent=684
+2026-03-09 14:52:44.925 [INFO] [#4] pid=21 cpu=0.21 mem=1542.84 disk_r=0 disk_w=0 (raw_r=0 raw_w=0) net_recv=6819 net_sent=2117
+2026-03-09 14:52:46.564 [INFO] [#5] pid=21 cpu=1.08 mem=1593.14 disk_r=0 disk_w=0 (raw_r=0 raw_w=0) net_recv=6382 net_sent=2211
+2026-03-09 14:52:48.194 [INFO] [#6] pid=26 cpu=4.61 mem=1826.09 disk_r=0 disk_w=0 (raw_r=0 raw_w=0) net_recv=95079 net_sent=15704
+2026-03-09 14:53:04.277 [INFO] [#16] pid=27 cpu=0.60 mem=2125.13 disk_r=42220 disk_w=41600 (raw_r=42220 raw_w=41600) net_recv=23533 net_sent=34666
+2026-03-09 14:53:20.526 [INFO] [#26] pid=24 cpu=0.89 mem=1745.09 disk_r=147282 disk_w=149375 (raw_r=147282 raw_w=149375) net_recv=4423 net_sent=398
+2026-03-09 14:53:36.819 [INFO] [#36] pid=27 cpu=0.86 mem=1825.67 disk_r=115084 disk_w=116105 (raw_r=115084 raw_w=116105) net_recv=6423 net_sent=3436
+2026-03-09 14:53:53.088 [INFO] [#46] pid=26 cpu=1.66 mem=1766.27 disk_r=471239 disk_w=492489 (raw_r=471239 raw_w=492489) net_recv=76826 net_sent=5497
+2026-03-09 14:53:57.080 [INFO] ========== 结束收集 ==========
+2026-03-09 15:01:03.925 [INFO] [PDH 调试] target_bases={'chrome'} chrome实例=[('chrome', 0.0)] 全部实例(前25)=[('AggregatorHost', 0.0), ('AppProvisioningPlugin', 0.0), ('ChsIME', 0.0), ('Clash for Windows', 0.0), ('CodeSetup-stable-2.6.13', 0.0), ('CodeSetup-stable-2.6.13.tmp', 0.0), ('Cursor', 0.0), ('DAX3API', 0.0), ('DataExchangeHost', 0.0), ('DingTalk', 0.0), ('ElevocControlService', 0.0), ('FnHotkeyCapsLKNumLK', 0.0), ('FnHotkeyUtility', 0.0), ('Idle', 0.0), ('IntelAudioService', 0.0), ('IntelGraphicsSoftware.Service', 0.0), ('IpOverUsbSvc', 0.0), ('LAVService', 0.0), ('Lenovo.Modern.ImController', 0.0), ('LenovoPcManagerService', 0.0), ('LenovoTray', 0.0), ('LenovoUtilityService', 0.0), ('LnvSvcFdn', 0.0), ('Locator', 0.0), ('LockApp', 0.0)]
+2026-03-09 15:01:05.562 [INFO] ========== 开始收集 (日志: E:\tester\process-monitor\collect-debug.log) ========== exe=['chrome.exe'] interval_ms=1000 use_pdh_disk=True pid_count=21 pids=[1816, 2268, 4252, 7152, 8288, 8540, 12940, 13136, 13620, 13648, 13996, 14092, 17488, 19904, 21956, 26560, 27024, 28448, 29848, 33008]
+2026-03-09 15:01:05.562 [INFO] [首拍] cpu=0.36 mem=1485.48 disk_r=0 disk_w=0 (raw_r=0 raw_w=0) net_recv=7339 net_sent=501
+2026-03-09 15:01:05.572 [INFO] [Disk IO] PDH 连续 3 拍返回 0，已自动回退到 psutil，本拍起使用 psutil 数据
+2026-03-09 15:01:06.132 [INFO] [#1] pid=21 cpu=0.79 mem=1484.98 disk_r=0 disk_w=0 (raw_r=0 raw_w=0) net_recv=1997 net_sent=2007
+2026-03-09 15:01:07.703 [INFO] [#2] pid=21 cpu=1.00 mem=1482.36 disk_r=0 disk_w=0 (raw_r=0 raw_w=0) net_recv=13633 net_sent=845
+2026-03-09 15:01:09.271 [INFO] [#3] pid=21 cpu=0.95 mem=1483.04 disk_r=0 disk_w=0 (raw_r=0 raw_w=0) net_recv=4786 net_sent=333
+2026-03-09 15:01:10.834 [INFO] [#4] pid=21 cpu=0.54 mem=1485.26 disk_r=0 disk_w=0 (raw_r=0 raw_w=0) net_recv=10113 net_sent=1983
+2026-03-09 15:01:12.400 [INFO] [#5] pid=21 cpu=0.46 mem=1485.75 disk_r=0 disk_w=0 (raw_r=0 raw_w=0) net_recv=11090 net_sent=3571
+2026-03-09 15:01:13.970 [INFO] [#6] pid=21 cpu=0.42 mem=1485.26 disk_r=0 disk_w=0 (raw_r=0 raw_w=0) net_recv=17783 net_sent=3197
+2026-03-09 15:01:30.225 [INFO] [#16] pid=26 cpu=1.52 mem=2162.59 disk_r=3213652 disk_w=3248233 (raw_r=3213652 raw_w=3248233) net_recv=9556 net_sent=3238
+2026-03-09 15:01:45.976 [INFO] [#26] pid=26 cpu=0.58 mem=1815.90 disk_r=36303 disk_w=36303 (raw_r=36303 raw_w=36303) net_recv=10672 net_sent=686
+2026-03-09 15:02:02.251 [INFO] [#36] pid=27 cpu=2.28 mem=2250.04 disk_r=3451894 disk_w=3709343 (raw_r=3451894 raw_w=3709343) net_recv=17563 net_sent=12242
+2026-03-09 15:02:18.663 [INFO] [#46] pid=29 cpu=2.50 mem=2319.29 disk_r=7803426 disk_w=7816762 (raw_r=7803426 raw_w=7816762) net_recv=169176 net_sent=9319

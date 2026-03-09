@@ -7,6 +7,7 @@ const path = require('path');
 const root = path.join(__dirname, '..');
 const staging = path.join(root, '.electron-app');
 const outDir = path.join(root, 'dist-win');
+const pythonEmbedDir = path.join(root, 'python-3.11.8-embed-amd64');
 
 function rm(dir) {
   if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });
@@ -31,4 +32,10 @@ fs.mkdirSync(staging, { recursive: true });
 copy(path.join(root, 'main.py'), path.join(staging, 'main.py'));
 copy(path.join(root, 'src'), path.join(staging, 'src'));
 copy(path.join(root, 'requirements.txt'), path.join(staging, 'requirements.txt'));
+if (fs.existsSync(pythonEmbedDir)) {
+  copy(pythonEmbedDir, path.join(staging, 'python'));
+  console.log('prepare-app: embedded Python copied');
+} else {
+  console.warn('prepare-app: python-3.11.8-embed-amd64 not found, skip embedding Python');
+}
 console.log('prepare-app: .electron-app ready');

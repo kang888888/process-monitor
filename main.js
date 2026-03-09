@@ -3,8 +3,13 @@
  */
 const path = require('path');
 const http = require('http');
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, Menu } = require('electron');
 const { spawn } = require('child_process');
+
+// Windows：设置 AppUserModelID，避免任务栏/快捷方式图标不更新或显示为默认 Electron 图标
+if (process.platform === 'win32') {
+  app.setAppUserModelId('com.process-monitor.app');
+}
 
 // 开发时把 userData 放到项目目录，避免默认缓存路径被占用导致「拒绝访问」
 if (!app.isPackaged) {
@@ -30,10 +35,21 @@ function getAppPath() {
 
 function startPython() {
   const appPath = getAppPath();
-  const python = process.platform === 'win32' ? 'python' : 'python3';
-  const env = { ...process.env, PYTHONPATH: appPath };
+  let pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
+  let env = { ...process.env, PYTHONPATH: appPath };
 
-  pythonProcess = spawn(python, ['main.py'], {
+  // 打包后的 Windows 版本：优先使用内置的嵌入式 Python
+  if (process.platform === 'win32' && app.isPackaged) {
+    const embedDir = path.join(appPath, 'python');
+    const embedExe = path.join(embedDir, 'python.exe');
+    pythonCmd = embedExe;
+    env = {
+      ...env,
+      PYTHONHOME: embedDir,
+    };
+  }
+
+  pythonProcess = spawn(pythonCmd, ['main.py'], {
     cwd: appPath,
     env,
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -82,6 +98,8 @@ function waitForServer(maxWaitMs = 15000, intervalMs = 200) {
 }
 
 function createWindow() {
+  const appPath = getAppPath();
+  const iconPath = path.join(appPath, 'src', 'web', 'img', 'app.ico');
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 780,
@@ -92,10 +110,25 @@ function createWindow() {
       contextIsolation: true,
     },
     title: '进程监控',
+    icon: iconPath,
   });
 
   mainWindow.loadURL(API_URL);
   mainWindow.on('closed', () => { mainWindow = null; });
+
+  // 右键菜单：在加载远程 URL 时默认无菜单，显式提供「检查」打开 DevTools
+  mainWindow.webContents.on('context-menu', (_event, params) => {
+    const menu = Menu.buildFromTemplate([
+      {
+        label: '检查',
+        click: () => {
+          mainWindow.webContents.inspectElement(params.x, params.y);
+          mainWindow.webContents.openDevTools();
+        },
+      },
+    ]);
+    menu.popup();
+  });
 }
 
 app.whenReady().then(() => {

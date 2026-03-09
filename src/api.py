@@ -72,15 +72,26 @@ def list_apps():
 
 @app.route("/api/monitor/start", methods=["POST"])
 def start_monitor():
-    """启动监控"""
+    """启动监控，支持单个 exeName 或多个 exeNames。usePdhDiskIo：Windows 下使用 PDH 磁盘 IO（与任务管理器对齐）。"""
     data = request.get_json() or {}
-    exe_name = data.get("exeName", "").strip()
     interval_ms = data.get("intervalMs", DEFAULT_INTERVAL_MS)
-    if not exe_name:
-        return jsonify({"ok": False, "error": "exeName required"}), 400
+    use_pdh_disk_io = data.get("usePdhDiskIo", False)
+    exe_names = data.get("exeNames")
+    if exe_names is None:
+        exe_name = (data.get("exeName") or "").strip()
+        exe_names = [exe_name] if exe_name else []
+    else:
+        exe_names = [str(e).strip() for e in exe_names if e and str(e).strip()]
+    if not exe_names:
+        return jsonify({"ok": False, "error": "exeName 或 exeNames 必填"}), 400
     interval_ms = max(MIN_INTERVAL_MS, min(MAX_INTERVAL_MS, interval_ms))
-    collector.start(exe_name, interval_ms)
-    return jsonify({"ok": True, "exeName": exe_name, "intervalMs": interval_ms})
+    collector.start(exe_names, interval_ms, use_pdh_disk_io=use_pdh_disk_io)
+    return jsonify({
+        "ok": True,
+        "exeNames": exe_names,
+        "intervalMs": interval_ms,
+        "usePdhDiskIo": collector._use_pdh_disk_io,
+    })
 
 
 @app.route("/api/monitor/stop", methods=["POST"])
@@ -114,15 +125,29 @@ def get_latest():
     return jsonify({"sample": collector.get_latest()})
 
 
+def _parse_exe_names_from_request():
+    """从请求中解析要查询的 exe 名称列表"""
+    exe_list = request.args.getlist("exeNames")
+    if exe_list:
+        return [e.strip() for e in exe_list if e and str(e).strip()]
+    exe_names = request.args.get("exeNames")
+    if exe_names:
+        return [e.strip() for e in exe_names.split(",") if e.strip()]
+    exe_name = (request.args.get("exeName") or "").strip()
+    if exe_name:
+        return [exe_name]
+    return list(collector._target_exes) if collector._target_exes else []
+
+
 @app.route("/api/monitor/processes", methods=["GET"])
 def get_processes():
-    """获取当前监控应用的进程信息（用于弹窗查看）"""
+    """获取当前监控应用的进程信息（用于弹窗查看），支持多应用"""
     import psutil
-    exe_name = (request.args.get("exeName") or (collector._target_exe or "")).strip()
-    if not exe_name:
-        return jsonify({"ok": False, "error": "exeName required"}), 400
+    exe_names = _parse_exe_names_from_request()
+    if not exe_names:
+        return jsonify({"ok": False, "error": "exeName 或 exeNames 必填"}), 400
 
-    target = exe_name.lower().split("\\")[-1].split("/")[-1]
+    targets = {e.lower().split("\\")[-1].split("/")[-1] for e in exe_names}
     procs = []
     for p in psutil.process_iter(["pid", "name", "exe", "cmdline", "create_time", "status", "username", "memory_info"]):
         try:
@@ -130,7 +155,7 @@ def get_processes():
             if not name:
                 continue
             base = name.split("\\")[-1].split("/")[-1]
-            if base != target:
+            if base not in targets:
                 continue
             mi = p.info.get("memory_info")
             rss_mb = round(((mi.rss or 0) / (1024 * 1024)), 2) if mi else 0.0
@@ -153,9 +178,19 @@ def get_processes():
             continue
 
     procs.sort(key=lambda x: (x.get("rss_mb") or 0.0), reverse=True)
-    return jsonify({"ok": True, "exeName": exe_name, "processes": procs, "count": len(procs)})
+    return jsonify({"ok": True, "exeNames": exe_names, "processes": procs, "count": len(procs)})
 
 
 @app.route("/api/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok"})
+
+
+@app.route("/api/capabilities", methods=["GET"])
+def capabilities():
+    """返回能力标识，供前端决定是否展示 PDH 磁盘 IO 选项"""
+    import sys
+    from src.collector import _PDH_AVAILABLE
+    return jsonify({
+        "pdhDiskIoAvailable": sys.platform == "win32" and _PDH_AVAILABLE,
+    })

@@ -4,17 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>进程监控</title>
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-  <link rel="stylesheet" href="styles.css?v=4" />
+  <script src="lib/echarts.min.js"></script>
+  <link rel="stylesheet" href="styles.css?v=5" />
 </head>
 <body>
   <header class="toolbar">
-    <div class="control-group">
+    <div class="control-group app-select-wrap">
       <label>应用</label>
-      <select id="appSelect">
-        <option value="">-- 选择应用 --</option>
-      </select>
-      <button id="btnRefresh">刷新列表</button>
+      <div class="app-combo" id="appCombo">
+        <div class="app-tags" id="appTags"></div>
+        <input type="text" id="appInput" placeholder="搜索并选择应用（支持多选）" autocomplete="off" />
+        <button type="button" class="app-combo-trigger" id="appComboTrigger" title="展开/收起">▾</button>
+        <div id="appDropdown" class="app-dropdown hidden"></div>
+      </div>
+      <button id="btnRefresh">刷新应用</button>
     </div>
     <div class="control-group">
       <label>采集频率</label>
@@ -22,29 +25,40 @@
       <span id="freqLabel">1.0 秒</span>
     </div>
     <div class="control-group">
-      <button id="btnStart">开始监控</button>
-      <button id="btnStop">停止</button>
+      <button id="btnStart">开始收集</button>
+      <button id="btnStop" class="hidden">结束收集</button>
+    </div>
+    <div class="control-group">
+      <button id="btnExport">导出数据</button>
+      <button id="btnImport">导入展示</button>
+      <input id="fileImport" type="file" accept="application/json" class="hidden" />
     </div>
   </header>
 
   <main class="content">
     <section class="charts">
       <div class="chart-card">
-        <h3>CPU (%) <span class="chart-note">当前应用</span></h3>
+        <h3>CPU (%) <span class="chart-note chart-app-note" id="chartCpuNote">当前应用</span></h3>
         <div id="chartCpu" class="chart"></div>
       </div>
       <div class="chart-card">
-        <h3>内存 (MB) <span class="chart-note">当前应用</span></h3>
+        <h3>内存 (MB) <span class="chart-note chart-app-note" id="chartMemNote">当前应用</span></h3>
         <div id="chartMem" class="chart"></div>
       </div>
       <div class="chart-card">
-        <h3>GPU (%) <span class="chart-note">当前应用 · Windows</span></h3>
+        <h3>GPU (%) <span class="chart-note chart-app-note" id="chartGpuNote">当前应用 · Windows</span></h3>
         <p class="chart-desc">3D 引擎利用率，与任务管理器对齐</p>
         <div id="chartGpu" class="chart"></div>
       </div>
       <div class="chart-card">
-        <h3>磁盘 IO (MB/s) <span class="chart-note">当前应用</span></h3>
-        <p class="chart-desc">读/写为进程 io_counters 速率</p>
+        <h3>磁盘 IO (MB/s) <span class="chart-note chart-app-note" id="chartDiskNote">当前应用</span></h3>
+        <div class="chart-desc-row">
+          <p class="chart-desc" id="chartDiskDesc">读/写为进程 io_counters 速率（已做 EMA 平滑）</p>
+          <label class="chart-option" id="diskPdhOptionWrap">
+            <input type="checkbox" id="diskPdhCheckbox" title="使用 PDH 性能计数器，与任务管理器“磁盘”列对齐（仅文件系统 IO，不含网络）" />
+            <span>PDH（与任务管理器对齐）</span>
+          </label>
+        </div>
         <div id="chartDisk" class="chart"></div>
       </div>
       <div class="chart-card wide">
@@ -52,6 +66,7 @@
           <span class="chart-unit-select">
             <label class="sr-only" for="netUnitSelect">纵轴单位</label>
             <select id="netUnitSelect" title="纵轴单位">
+              <option value="KB/s">K/s</option>
               <option value="MB/s">MB/s</option>
               <option value="Mbps">Mbps</option>
             </select>
@@ -64,6 +79,7 @@
     </section>
     <aside class="sidebar">
       <h3>当前状态</h3>
+      <p id="currentAppHint" class="current-app-hint hidden">监控中：<span id="currentAppNames"></span></p>
       <div id="statusPanel">
         <p>进程数: <span id="procCount" class="linklike" title="点击查看进程详情">-</span></p>
         <p>CPU: <span id="liveCpu">-</span> %</p>
@@ -87,6 +103,23 @@
     </div>
   </div>
 
-  <script src="app.js?v=4"></script>
+  <!-- Toast 提示 -->
+  <div id="toast" class="toast toast--info hidden" role="status" aria-live="polite"></div>
+
+  <!-- 通用弹窗 -->
+  <div id="dialogOverlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+    <div class="modal dialog-modal">
+      <div class="modal-header">
+        <h3 id="dialogTitle">提示</h3>
+        <button id="dialogClose" class="modal-close" title="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="dialogMessage" class="dialog-message"></div>
+        <div id="dialogActions" class="dialog-actions"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=5"></script>
 </body>
 </html>

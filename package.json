@@ -1,7 +1,7 @@
 {
   "name": "process-monitor",
   "version": "1.0.0",
-  "description": "进程监控 - Electron 桌面壳",
+  "description": "Process Monitor - Electron desktop shell",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -17,7 +17,7 @@
   },
   "build": {
     "appId": "com.process-monitor.app",
-    "productName": "进程监控",
+    "productName": "Process Monitor",
     "directories": {
       "output": "dist-win"
     },
@@ -30,10 +30,12 @@
     "forceCodeSigning": false,
     "win": {
       "target": ["nsis"],
-      "icon": null,
-      "signAndEditExecutable": false
+      "icon": "src/web/img/app.ico",
+      "signAndEditExecutable": true
     },
     "nsis": {
+      "installerIcon": "src/web/img/app.ico",
+      "uninstallerIcon": "src/web/img/app.ico",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
     }

@@ -1,7 +1,17 @@
 """
 采集服务入口：同时启动 REST API/Web UI 与 WebSocket。
 """
+import os
+import sys
 import threading
+
+# 确保打包后仍能正确找到 src 包
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SRC_DIR = os.path.join(BASE_DIR, "src")
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+if SRC_DIR not in sys.path:
+    sys.path.insert(0, SRC_DIR)
 
 from src.config import API_PORT, WS_PORT, ENABLE_WS
 from src.api import app as flask_app
