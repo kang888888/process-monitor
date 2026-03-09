@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>进程监控</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="styles.css?v=3" />
+</head>
+<body>
+  <header class="toolbar">
+    <div class="control-group">
+      <label>应用</label>
+      <select id="appSelect">
+        <option value="">-- 选择应用 --</option>
+      </select>
+      <button id="btnRefresh">刷新列表</button>
+    </div>
+    <div class="control-group">
+      <label>采集频率</label>
+      <input type="range" id="freqSlider" min="200" max="5000" step="100" value="1000" />
+      <span id="freqLabel">1.0 秒</span>
+    </div>
+    <div class="control-group">
+      <button id="btnStart">开始监控</button>
+      <button id="btnStop">停止</button>
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="charts">
+      <div class="chart-card">
+        <h3>CPU (%)</h3>
+        <div id="chartCpu" class="chart"></div>
+      </div>
+      <div class="chart-card">
+        <h3>内存 (MB)</h3>
+        <div id="chartMem" class="chart"></div>
+      </div>
+      <div class="chart-card wide">
+        <h3>磁盘 IO (MB/s) <span class="chart-note">当前应用</span></h3>
+        <p class="chart-desc">读/写为进程 io_counters 速率，Windows 上为磁盘+网络合计</p>
+        <div id="chartDisk" class="chart chart-tall"></div>
+      </div>
+      <div class="chart-card wide">
+        <h3>网络 IO
+          <span class="chart-unit-select">
+            <label class="sr-only" for="netUnitSelect">纵轴单位</label>
+            <select id="netUnitSelect" title="纵轴单位">
+              <option value="MB/s">MB/s</option>
+              <option value="Mbps">Mbps</option>
+            </select>
+          </span>
+          <span class="chart-note">整机网卡</span>
+        </h3>
+        <p class="chart-desc">整机网卡下行/上行速率</p>
+        <div id="chartNet" class="chart chart-tall"></div>
+      </div>
+    </section>
+    <aside class="sidebar">
+      <h3>当前状态</h3>
+      <div id="statusPanel">
+        <p>进程数: <span id="procCount" class="linklike" title="点击查看进程详情">-</span></p>
+        <p>CPU: <span id="liveCpu">-</span> %</p>
+        <p>内存: <span id="liveMem">-</span> MB</p>
+      </div>
+    </aside>
+  </main>
+
+  <!-- 进程详情弹窗 -->
+  <div id="procModalOverlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="procModalTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="procModalTitle">进程详情</h3>
+        <button id="procModalClose" class="modal-close" title="关闭">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="procModalMeta" class="modal-meta"></div>
+        <div id="procModalContent" class="modal-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=3"></script>
+</body>
+</html>

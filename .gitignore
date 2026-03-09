@@ -1,0 +1,9 @@
+node_modules/
+dist-win/
+.electron-app/
+.electron-userdata/
+*.pyc
+__pycache__/
+.venv/
+venv/
+.env
