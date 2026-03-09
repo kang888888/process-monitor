@@ -154,14 +154,14 @@ async function openProcModal() {
     const d = await r.json();
     if (!d.ok) {
       if (procModalMeta) procModalMeta.textContent = `应用：${currentExe}`;
-      if (procModalContent) procModalContent.innerHTML = `<div style="color:#fca5a5;">${d.error || "获取失败"}</div>`;
+      if (procModalContent) procModalContent.innerHTML = `<div style="color:#e11d48;">${d.error || "获取失败"}</div>`;
       return;
     }
     if (procModalMeta) procModalMeta.textContent = `应用：${d.exeName}，进程数：${d.count}`;
     if (procModalContent) procModalContent.innerHTML = renderProcTable(d.processes);
   } catch (e) {
     if (procModalMeta) procModalMeta.textContent = `应用：${currentExe}`;
-    if (procModalContent) procModalContent.innerHTML = `<div style="color:#fca5a5;">请求失败，请确认服务正常运行</div>`;
+    if (procModalContent) procModalContent.innerHTML = `<div style="color:#e11d48;">请求失败，请确认服务正常运行</div>`;
   } finally {
     procModalLoading = false;
   }
@@ -169,14 +169,18 @@ async function openProcModal() {
 
 function initCharts() {
   const common = {
-    grid: { left: 60, right: 20, top: 20, bottom: 30, containLabel: true },
-    xAxis: { type: "time", boundaryGap: false },
+    grid: { left: 60, right: 20, top: 42, bottom: 30, containLabel: true },
+    xAxis: { type: "time", boundaryGap: false, axisLine: { lineStyle: { color: "#bae6fd" } }, axisLabel: { color: "#64748b" } },
     yAxis: {
       type: "value",
-      splitLine: { lineStyle: { color: "#0f3460" } },
+      splitLine: { lineStyle: { color: "#e0f2fe" } },
+      axisLine: { show: false },
+      axisLabel: { color: "#64748b" },
     },
     series: [{ type: "line", smooth: true, symbol: "none", sampling: "lttb" }],
   };
+
+  const axisNameStyle = { color: "#0369a1", nameGap: 12 };
 
   charts.cpu = echarts.init(chartCpu);
   charts.cpu.setOption({
@@ -184,15 +188,19 @@ function initCharts() {
     tooltip: {
       trigger: "axis",
       valueFormatter: (v) => `${Number(v).toFixed(2)} %`,
+      backgroundColor: "rgba(255,255,255,0.95)",
+      borderColor: "#bae6fd",
+      textStyle: { color: "#334155" },
     },
     yAxis: {
       ...common.yAxis,
       name: "CPU %",
-      nameTextStyle: { color: "#94a3b8" },
-      nameGap: 12,
+      nameTextStyle: axisNameStyle,
+      min: 0,
+      max: 100,
       axisLabel: { formatter: (v) => `${v}` },
     },
-    series: [{ ...common.series[0], name: "CPU %", itemStyle: { color: "#10b981" } }],
+    series: [{ ...common.series[0], name: "CPU %", itemStyle: { color: "#0ea5e9" } }],
   });
 
   charts.mem = echarts.init(chartMem);
@@ -201,15 +209,19 @@ function initCharts() {
     tooltip: {
       trigger: "axis",
       valueFormatter: (v) => `${Number(v).toFixed(2)} MB`,
+      backgroundColor: "rgba(255,255,255,0.95)",
+      borderColor: "#bae6fd",
+      textStyle: { color: "#334155" },
     },
     yAxis: {
       ...common.yAxis,
       name: "MB",
-      nameTextStyle: { color: "#94a3b8" },
-      nameGap: 12,
+      nameTextStyle: axisNameStyle,
+      min: 0,
+      max: 1024,
       axisLabel: { formatter: (v) => `${v}` },
     },
-    series: [{ ...common.series[0], name: "内存 MB", itemStyle: { color: "#38bdf8" } }],
+    series: [{ ...common.series[0], name: "内存 MB", itemStyle: { color: "#06b6d4" } }],
   });
 
   if (chartGpu) {
@@ -219,12 +231,14 @@ function initCharts() {
       tooltip: {
         trigger: "axis",
         valueFormatter: (v) => `${Number(v).toFixed(2)} %`,
+        backgroundColor: "rgba(255,255,255,0.95)",
+        borderColor: "#bae6fd",
+        textStyle: { color: "#334155" },
       },
       yAxis: {
         ...common.yAxis,
         name: "%",
-        nameTextStyle: { color: "#94a3b8" },
-        nameGap: 12,
+        nameTextStyle: axisNameStyle,
         min: 0,
         max: 100,
         axisLabel: { formatter: (v) => `${v}` },
@@ -236,37 +250,45 @@ function initCharts() {
   charts.disk = echarts.init(chartDisk);
   charts.disk.setOption({
     ...common,
-    legend: { top: 0, textStyle: { color: "#94a3b8" } },
+    legend: { top: 0, textStyle: { color: "#0369a1" } },
     tooltip: {
       trigger: "axis",
       valueFormatter: (v) => `${Number(v).toFixed(2)} MB/s`,
+      backgroundColor: "rgba(255,255,255,0.95)",
+      borderColor: "#bae6fd",
+      textStyle: { color: "#334155" },
     },
     yAxis: {
       ...common.yAxis,
       name: "MB/s",
-      nameTextStyle: { color: "#94a3b8" },
-      nameGap: 12,
+      nameTextStyle: axisNameStyle,
+      min: 0,
+      max: 100,
       axisLabel: { formatter: (v) => `${v}` },
     },
     series: [
       { ...common.series[0], name: "读 MB/s", itemStyle: { color: "#f59e0b" } },
-      { ...common.series[0], name: "写 MB/s", itemStyle: { color: "#ef4444" } },
+      { ...common.series[0], name: "写 MB/s", itemStyle: { color: "#f43f5e" } },
     ],
   });
 
   charts.net = echarts.init(chartNet);
   charts.net.setOption({
     ...common,
-    legend: { top: 0, textStyle: { color: "#94a3b8" } },
+    legend: { top: 0, textStyle: { color: "#0369a1" } },
     tooltip: {
       trigger: "axis",
       valueFormatter: (v) => `${Number(v).toFixed(2)} ${getNetUnit()}`,
+      backgroundColor: "rgba(255,255,255,0.95)",
+      borderColor: "#bae6fd",
+      textStyle: { color: "#334155" },
     },
     yAxis: {
       ...common.yAxis,
       name: getNetUnit(),
-      nameTextStyle: { color: "#94a3b8" },
-      nameGap: 12,
+      nameTextStyle: axisNameStyle,
+      min: 0,
+      max: 100,
       axisLabel: { formatter: (v) => `${v}` },
     },
     series: [
@@ -285,7 +307,13 @@ function updateCharts() {
   const filtered = samples.filter((s) => s.ts >= cutoff);
 
   charts.cpu.setOption({ series: [{ data: filtered.map((s) => [s.ts * 1000, s.cpu_pct]) }] });
-  charts.mem.setOption({ series: [{ data: filtered.map((s) => [s.ts * 1000, s.mem_rss_mb]) }] });
+  const memData = filtered.map((s) => [s.ts * 1000, s.mem_rss_mb]);
+  charts.mem.setOption({
+    series: [{ data: memData }],
+    yAxis: filtered.length > 0
+      ? { max: Math.ceil(Math.max(...filtered.map((s) => s.mem_rss_mb), 100) * 1.1) }
+      : undefined,
+  });
   if (charts.gpu) {
     charts.gpu.setOption({
       series: [{ data: filtered.map((s) => [s.ts * 1000, s.gpu_pct != null ? s.gpu_pct : 0]) }]
@@ -294,11 +322,22 @@ function updateCharts() {
   // 磁盘 IO：读/写分别绑定，避免与 series 顺序混淆导致两条线用错数据
   const diskReadData = filtered.map((s) => [s.ts * 1000, bytesToMB(s.disk_read_bps)]);
   const diskWriteData = filtered.map((s) => [s.ts * 1000, bytesToMB(s.disk_write_bps)]);
+  const diskMax =
+    filtered.length > 0
+      ? Math.ceil(
+          Math.max(
+            ...diskReadData.map((d) => d[1]),
+            ...diskWriteData.map((d) => d[1]),
+            10
+          ) * 1.1
+        )
+      : undefined;
   charts.disk.setOption({
     series: [
       { name: "读 MB/s", data: diskReadData },
       { name: "写 MB/s", data: diskWriteData },
     ],
+    yAxis: diskMax != null ? { max: diskMax } : undefined,
   });
   // 网络：纵轴单位由 netUnitSelect 决定，并对异常峰值做前端限幅
   const netUnit = getNetUnit();
@@ -306,9 +345,13 @@ function updateCharts() {
   const sentValues = filtered.map((s) => netBpsToDisplay(s.net_sent_bps));
   const recvCapped = capNetOutliers(recvValues);
   const sentCapped = capNetOutliers(sentValues);
+  const netMax =
+    filtered.length > 0
+      ? Math.ceil(Math.max(...recvCapped, ...sentCapped, 1) * 1.1)
+      : undefined;
   charts.net.setOption({
     tooltip: { valueFormatter: (v) => `${Number(v).toFixed(2)} ${netUnit}` },
-    yAxis: { name: netUnit },
+    yAxis: { name: netUnit, ...(netMax != null ? { max: netMax } : {}) },
     series: [
       { name: `下行 ${netUnit}`, data: filtered.map((s, i) => [s.ts * 1000, recvCapped[i]]) },
       { name: `上行 ${netUnit}`, data: filtered.map((s, i) => [s.ts * 1000, sentCapped[i]]) },

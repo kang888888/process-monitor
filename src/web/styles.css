@@ -5,8 +5,8 @@
 body {
   margin: 0;
   font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
-  background: #1a1a2e;
-  color: #eee;
+  background: #dbeafe;
+  color: #1e293b;
   min-height: 100vh;
 }
 
@@ -15,8 +15,8 @@ body {
   align-items: center;
   gap: 1.5rem;
   padding: 0.75rem 1rem;
-  background: #16213e;
-  border-bottom: 1px solid #0f3460;
+  background: #bfdbfe;
+  border-bottom: 1px solid #93c5fd;
 }
 
 .control-group {
@@ -27,51 +27,51 @@ body {
 
 .control-group label {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: #0369a1;
 }
 
 select {
   padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  border: 1px solid #0f3460;
-  background: #1a1a2e;
-  color: #eee;
+  border-radius: 8px;
+  border: 1px solid #93c5fd;
+  background: #eff6ff;
+  color: #1e293b;
   min-width: 180px;
 }
 
 button {
   padding: 0.4rem 1rem;
-  border-radius: 6px;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
   font-size: 0.9rem;
 }
 
 #btnStart {
-  background: #10b981;
+  background: #0ea5e9;
   color: #fff;
 }
 
 #btnStart:hover {
-  background: #059669;
+  background: #0284c7;
 }
 
 #btnStop {
-  background: #ef4444;
+  background: #f43f5e;
   color: #fff;
 }
 
 #btnStop:hover {
-  background: #dc2626;
+  background: #e11d48;
 }
 
 #btnRefresh {
-  background: #334155;
-  color: #e2e8f0;
+  background: #94a3b8;
+  color: #fff;
 }
 
 #btnRefresh:hover {
-  background: #475569;
+  background: #64748b;
 }
 
 input[type="range"] {
@@ -81,6 +81,7 @@ input[type="range"] {
 #freqLabel {
   min-width: 4rem;
   font-size: 0.9rem;
+  color: #0369a1;
 }
 
 .content {
@@ -97,10 +98,11 @@ input[type="range"] {
 }
 
 .chart-card {
-  background: #16213e;
-  border-radius: 8px;
+  background: #eff6ff;
+  border-radius: 12px;
   padding: 1rem;
-  border: 1px solid #0f3460;
+  border: 1px solid #93c5fd;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.12);
 }
 
 .chart-card.wide {
@@ -110,7 +112,7 @@ input[type="range"] {
 .chart-card h3 {
   margin: 0 0 0.5rem 0;
   font-size: 0.95rem;
-  color: #94a3b8;
+  color: #0369a1;
 }
 
 .chart-note {
@@ -127,6 +129,9 @@ input[type="range"] {
   min-width: auto;
   padding: 0.2rem 0.5rem;
   font-size: 0.85rem;
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #1e293b;
 }
 
 .sr-only {
@@ -158,36 +163,38 @@ input[type="range"] {
 
 .sidebar {
   width: 220px;
-  background: #16213e;
-  border-radius: 8px;
+  background: #eff6ff;
+  border-radius: 12px;
   padding: 1rem;
-  border: 1px solid #0f3460;
+  border: 1px solid #93c5fd;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.12);
 }
 
 .sidebar h3 {
   margin: 0 0 0.75rem 0;
   font-size: 0.95rem;
-  color: #94a3b8;
+  color: #0369a1;
 }
 
 #statusPanel p {
   margin: 0.4rem 0;
   font-size: 0.9rem;
+  color: #334155;
 }
 
 #statusPanel span {
   font-weight: 600;
-  color: #38bdf8;
+  color: #0ea5e9;
 }
 
 .linklike {
   cursor: pointer;
   text-decoration: underline;
-  text-decoration-color: rgba(56, 189, 248, 0.7);
+  text-decoration-color: rgba(14, 165, 233, 0.6);
 }
 
 .linklike:hover {
-  color: #7dd3fc;
+  color: #0284c7;
 }
 
 .hidden {
@@ -197,7 +204,7 @@ input[type="range"] {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(3, 7, 18, 0.65);
+  background: rgba(59, 130, 246, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -209,10 +216,10 @@ input[type="range"] {
   width: min(980px, 96vw);
   max-height: 88vh;
   overflow: hidden;
-  background: #0b1224;
-  border: 1px solid #0f3460;
+  background: #eff6ff;
+  border: 1px solid #93c5fd;
   border-radius: 12px;
-  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 12px 40px rgba(59, 130, 246, 0.2);
 }
 
 .modal-header {
@@ -221,14 +228,14 @@ input[type="range"] {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.75rem 1rem;
-  background: #121b33;
-  border-bottom: 1px solid #0f3460;
+  background: #dbeafe;
+  border-bottom: 1px solid #93c5fd;
 }
 
 .modal-header h3 {
   margin: 0;
   font-size: 1rem;
-  color: #e2e8f0;
+  color: #0369a1;
 }
 
 .modal-close {
@@ -237,12 +244,12 @@ input[type="range"] {
   line-height: 30px;
   font-size: 20px;
   border-radius: 8px;
-  background: #334155;
-  color: #e2e8f0;
+  background: #bfdbfe;
+  color: #1d4ed8;
 }
 
 .modal-close:hover {
-  background: #475569;
+  background: #93c5fd;
 }
 
 .modal-body {
@@ -253,7 +260,7 @@ input[type="range"] {
 
 .modal-meta {
   font-size: 0.9rem;
-  color: #94a3b8;
+  color: #64748b;
   margin-bottom: 0.75rem;
 }
 
@@ -265,28 +272,28 @@ input[type="range"] {
 
 .proc-table th,
 .proc-table td {
-  border-bottom: 1px solid #0f3460;
+  border-bottom: 1px solid #e0f2fe;
   padding: 0.55rem 0.5rem;
   vertical-align: top;
 }
 
 .proc-table th {
   text-align: left;
-  color: #94a3b8;
+  color: #1d4ed8;
   font-weight: 600;
   position: sticky;
   top: 0;
-  background: #0b1224;
+  background: #eff6ff;
 }
 
 .proc-table td {
-  color: #e2e8f0;
+  color: #334155;
 }
 
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
   font-size: 0.85rem;
-  color: #cbd5e1;
+  color: #475569;
   white-space: pre-wrap;
   word-break: break-word;
 }

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>进程监控</title>
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-  <link rel="stylesheet" href="styles.css?v=3" />
+  <link rel="stylesheet" href="styles.css?v=4" />
 </head>
 <body>
   <header class="toolbar">
@@ -30,11 +30,11 @@
   <main class="content">
     <section class="charts">
       <div class="chart-card">
-        <h3>CPU (%)</h3>
+        <h3>CPU (%) <span class="chart-note">当前应用</span></h3>
         <div id="chartCpu" class="chart"></div>
       </div>
       <div class="chart-card">
-        <h3>内存 (MB)</h3>
+        <h3>内存 (MB) <span class="chart-note">当前应用</span></h3>
         <div id="chartMem" class="chart"></div>
       </div>
       <div class="chart-card">
@@ -42,10 +42,10 @@
         <p class="chart-desc">3D 引擎利用率，与任务管理器对齐</p>
         <div id="chartGpu" class="chart"></div>
       </div>
-      <div class="chart-card wide">
+      <div class="chart-card">
         <h3>磁盘 IO (MB/s) <span class="chart-note">当前应用</span></h3>
-        <p class="chart-desc">读/写为进程 io_counters 速率，Windows 上为磁盘+网络合计</p>
-        <div id="chartDisk" class="chart chart-tall"></div>
+        <p class="chart-desc">读/写为进程 io_counters 速率</p>
+        <div id="chartDisk" class="chart"></div>
       </div>
       <div class="chart-card wide">
         <h3>网络 IO
@@ -87,6 +87,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>
